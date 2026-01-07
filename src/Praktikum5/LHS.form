@@ -289,13 +289,13 @@
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="fieldKode" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="fieldMataKuliah" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="fieldAngka" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="fieldHuruf" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="fieldBobot" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="fieldMutu" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="fieldKeterangan" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <Component id="fieldSKS" max="32767" attributes="0"/>
+                      <Component id="fieldAngka" alignment="0" max="32767" attributes="0"/>
                   </Group>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
@@ -397,6 +397,9 @@
               </Table>
             </Property>
           </Properties>
+          <Events>
+            <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="tabelLHSMouseClicked"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>
@@ -412,7 +415,7 @@
                   <EmptySpace type="separate" max="-2" attributes="0"/>
                   <Component id="buttonHapus" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="separate" max="-2" attributes="0"/>
-                  <Component id="jButton7" min="-2" max="-2" attributes="0"/>
+                  <Component id="buttonReset" min="-2" max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
@@ -424,7 +427,7 @@
                       <Component id="buttonSimpan" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="buttonUpdate" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="buttonHapus" alignment="3" min="-2" max="-2" attributes="0"/>
-                      <Component id="jButton7" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="buttonReset" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace max="32767" attributes="0"/>
               </Group>
@@ -456,10 +459,13 @@
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonHapusActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jButton7">
+        <Component class="javax.swing.JButton" name="buttonReset">
           <Properties>
-            <Property name="text" type="java.lang.String" value="KELUAR"/>
+            <Property name="text" type="java.lang.String" value="RESET"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="buttonResetActionPerformed"/>
+          </Events>
         </Component>
       </SubComponents>
     </Container>

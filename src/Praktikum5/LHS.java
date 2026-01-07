@@ -28,6 +28,8 @@ public class LHS extends javax.swing.JFrame {
         tabelLHS.setModel(tableModel);
         angkaDefaultBorder = fieldAngka.getBorder();
         sksDefaultBorder = fieldSKS.getBorder();
+        buttonUpdate.setEnabled(false);
+        buttonHapus.setEnabled(false);
         
         fieldAngka.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -38,8 +40,8 @@ public class LHS extends javax.swing.JFrame {
             public void changedUpdate(DocumentEvent e) { onChange(); }
 
             private void onChange() {
-                validateAngka();        // hanya field ini
-                if (allValid()) hitung();
+                validateAngka(); hitung();        // hanya field ini
+                // if (allValid()) hitung();
             }
         });
 
@@ -52,8 +54,8 @@ public class LHS extends javax.swing.JFrame {
             public void changedUpdate(DocumentEvent e) { onChange(); }
 
             private void onChange() {
-                validateSKS();          // hanya field ini
-                if (allValid()) hitung();
+                validateSKS(); hitung();          // hanya field ini
+                // if (allValid()) hitung();
             }
         });
     }
@@ -92,7 +94,11 @@ public class LHS extends javax.swing.JFrame {
     
     private boolean validateAngka() {
         try {
-            Integer.valueOf(fieldAngka.getText());
+            int angka = Integer.parseInt(fieldAngka.getText());
+            if (angka >= 100 || angka < 0) {
+                error(fieldAngka);
+                return false;
+            }
             resetError(fieldAngka, angkaDefaultBorder);
             return true;
         } catch (NumberFormatException e) {
@@ -183,7 +189,7 @@ public class LHS extends javax.swing.JFrame {
         labelError.setText("(Input salah)");
     }
     
-    public void totalSKS(){
+    private void totalSKS(){
         double totalSks = 0;
         int jumlahRecord = tabelLHS.getRowCount();
         for (int k = 0; k < jumlahRecord; k++){
@@ -193,7 +199,7 @@ public class LHS extends javax.swing.JFrame {
         fieldTotalSKS.setText(df.format(totalSks));
     }
     
-    public void totalMUTU(){
+    private void totalMUTU(){
         double totalMutu = 0; // double totalMutu = 0;
         int jumlahRecord = tabelLHS.getRowCount();
         for (int l = 0; l < jumlahRecord; l++){
@@ -205,17 +211,23 @@ public class LHS extends javax.swing.JFrame {
     
     private float ip;
     
-    public void hitungIP(){
+    private void hitungIP(){
         float totalSKs = Float.parseFloat(fieldTotalSKS.getText());
         float totalMUtu = Float.parseFloat(fieldTotalMutu.getText());
-        float IP;
-        IP = totalMUtu / totalSKs;
+
         DecimalFormat df = new DecimalFormat("#.00");
-        fieldIP.setText(df.format(IP));
-        ip = IP;
+
+        if (totalSKs == 0) {
+            fieldIP.setText("0.00"); // atau ""
+            ip = 0;
+        } else {
+            float IP = totalMUtu / totalSKs;
+            fieldIP.setText(df.format(IP));
+            ip = IP;
+        }
     }
     
-    public void maxSKS(){
+    private void maxSKS(){
         float Ip = ip; // float Ip = Float.parseFloat(fieldIP.getText());
         String maxSKS;
         if(Ip >= 3)
@@ -227,7 +239,7 @@ public class LHS extends javax.swing.JFrame {
         else if (Ip < 2 && Ip >= 0)
             maxSKS = "15 SKS";
         else
-            maxSKS = "Input salah!";
+            maxSKS = "0 SKS";
         
         /*
         IPK ≥ 3,00	24 SKS (Beban studi penuh/maksimal)
@@ -251,7 +263,36 @@ public class LHS extends javax.swing.JFrame {
         fieldMaxSKS.setText(String.valueOf(maxSKS));
     }
     
-    public void tampilkan(){
+    private void resetForm() {
+        fieldKode.setText("");
+        fieldNama.setText("");
+        fieldMataKuliah.setText("");
+        fieldSKS.setText("");
+        fieldAngka.setText("");
+        fieldHuruf.setText("");
+        fieldBobot.setText("");
+        fieldMutu.setText("");
+        fieldKeterangan.setText("");
+        
+        resetError(fieldSKS, sksDefaultBorder);
+        resetError(fieldAngka, angkaDefaultBorder);
+    }
+    
+    private void setModeTambah() {
+        buttonSimpan.setEnabled(true);
+        buttonUpdate.setEnabled(false);
+        buttonHapus.setEnabled(false);
+    }
+
+    private void setModeEdit() {
+        buttonSimpan.setEnabled(false);
+        buttonUpdate.setEnabled(true);
+        buttonHapus.setEnabled(true);
+    }
+    
+    private void tampilkan(){
+        resetForm();
+        
         baris = tabelLHS.getSelectedRow();
         fieldKode.setText(tableModel.getValueAt(baris, 0).toString());
         fieldMataKuliah.setText(tableModel.getValueAt(baris, 1).toString());
@@ -261,15 +302,17 @@ public class LHS extends javax.swing.JFrame {
         fieldBobot.setText(tableModel.getValueAt(baris, 5).toString());
         fieldMutu.setText(tableModel.getValueAt(baris, 6).toString());
         fieldKeterangan.setText(tableModel.getValueAt(baris, 7).toString());
+        
+        setModeEdit();
     }
     
     private void hitung(){
+        String nilaiHuruf, keterangan;
+        int mutu, bobot;
+        
         if(allValid()){
             int nilaiAngka = Integer.parseInt(fieldAngka.getText());
             int SKS = Integer.parseInt(fieldSKS.getText());
-            
-            String nilaiHuruf, keterangan;
-            int mutu, bobot;
 
             if (nilaiAngka > 80){
                 nilaiHuruf = "A";
@@ -287,24 +330,25 @@ public class LHS extends javax.swing.JFrame {
                 nilaiHuruf = "D";
                 bobot = 1;
                 keterangan = "GAGAL"; // LULUS
-            } else if (nilaiAngka <= 45 && nilaiAngka > 0){ // nilaiAngka >= 45 && nilaiAngka > 0
+            } else { // nilaiAngka >= 45 && nilaiAngka > 0
                 nilaiHuruf = "E";
                 bobot = 0;
                 keterangan = "GAGAL"; // LULUS
-            } else {
-                labelError.setText("(Input salah)");
-                nilaiHuruf = "Input salah";
-                bobot = 0;
-                keterangan = "Input salah";
             }
 
             mutu = SKS * bobot;
-
-            fieldHuruf.setText(String.valueOf(nilaiHuruf));
-            fieldBobot.setText(String.valueOf(bobot));
-            fieldMutu.setText(String.valueOf(mutu));
-            fieldKeterangan.setText(String.valueOf(keterangan));
+        } else {
+            labelError.setText("(Input salah)");
+            nilaiHuruf = "Input salah";
+            bobot = 0;
+            keterangan = "Input salah";
+            mutu = 0;
         }
+        
+        fieldHuruf.setText(String.valueOf(nilaiHuruf));
+        fieldBobot.setText(String.valueOf(bobot));
+        fieldMutu.setText(String.valueOf(mutu));
+        fieldKeterangan.setText(String.valueOf(keterangan));
     }
     
     /**
@@ -350,7 +394,7 @@ public class LHS extends javax.swing.JFrame {
         buttonSimpan = new javax.swing.JButton();
         buttonUpdate = new javax.swing.JButton();
         buttonHapus = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
+        buttonReset = new javax.swing.JButton();
         jPanel6 = new javax.swing.JPanel();
         fieldMaxSKS = new javax.swing.JTextField();
         jLabel14 = new javax.swing.JLabel();
@@ -537,12 +581,12 @@ public class LHS extends javax.swing.JFrame {
                     .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(fieldKode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(fieldMataKuliah, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(fieldAngka, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(fieldHuruf, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(fieldBobot, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(fieldMutu, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addComponent(fieldKeterangan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(fieldSKS))
+                    .addComponent(fieldSKS)
+                    .addComponent(fieldAngka))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -557,6 +601,11 @@ public class LHS extends javax.swing.JFrame {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tabelLHS.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabelLHSMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tabelLHS);
 
         buttonSimpan.setText("SIMPAN");
@@ -580,7 +629,12 @@ public class LHS extends javax.swing.JFrame {
             }
         });
 
-        jButton7.setText("KELUAR");
+        buttonReset.setText("RESET");
+        buttonReset.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                buttonResetActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -593,7 +647,7 @@ public class LHS extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addComponent(buttonHapus)
                 .addGap(18, 18, 18)
-                .addComponent(jButton7))
+                .addComponent(buttonReset))
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -603,7 +657,7 @@ public class LHS extends javax.swing.JFrame {
                     .addComponent(buttonSimpan)
                     .addComponent(buttonUpdate)
                     .addComponent(buttonHapus)
-                    .addComponent(jButton7))
+                    .addComponent(buttonReset))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -766,47 +820,85 @@ public class LHS extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_fieldTotalMutuActionPerformed
 
-    private void buttonHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonHapusActionPerformed
-        // TODO add your handling code here:
-        tableModel.removeRow(baris);
+    private void perbaruiLHS(){
         totalSKS();
         totalMUTU();
         hitungIP();
         maxSKS();
+    }
+    
+    private void buttonHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonHapusActionPerformed
+        // TODO add your handling code here:
+        tableModel.removeRow(baris);
+        
+        if (tabelLHS.getRowCount() == 0) {
+            fieldTotalSKS.setText("0");
+            fieldTotalMutu.setText("0");
+            fieldIP.setText("0.00");
+            ip = 0;
+        }
+        
+        resetForm();
+        setModeTambah();
+        perbaruiLHS();
     }//GEN-LAST:event_buttonHapusActionPerformed
     
     private void buttonUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonUpdateActionPerformed
         // TODO add your handling code here:
-        mataKuliah m = new mataKuliah();
-        m.kode = fieldKode.getText();
-        m.matkul = fieldMataKuliah.getText();        
-        m.sks = fieldSKS.getText();
-        m.nilaiAngka = fieldAngka.getText();
-        m.nilaiHuruf = fieldHuruf.getText();
-        m.bobot = fieldBobot.getText();
-        m.mutu = fieldMutu.getText();
-        m.keterangan = fieldKeterangan.getText();
-        
-        Object[] row = {
-            m.kode, m.matkul, m.sks,
-            m.nilaiAngka, m.nilaiHuruf, m.bobot,
-            m.mutu, m.keterangan
-        };
-        
-        tableModel.removeRow(baris);
-        tableModel.insertRow(baris, row);
-        totalSKS();
-        totalMUTU();
-        hitungIP();
-        maxSKS();
+       simpanUpdate(true);
     }//GEN-LAST:event_buttonUpdateActionPerformed
        
+    private void simpanUpdate(boolean update){
+        if(allValid()){
+            mataKuliah m = new mataKuliah();
+            m.kode = fieldKode.getText();
+            m.matkul = fieldMataKuliah.getText();        
+            m.sks = fieldSKS.getText();
+            m.nilaiAngka = fieldAngka.getText();
+            m.nilaiHuruf = fieldHuruf.getText();
+            m.bobot = fieldBobot.getText();
+            m.mutu = fieldMutu.getText();
+            m.keterangan = fieldKeterangan.getText();
+
+            Object[] row = {
+                m.kode, m.matkul, m.sks,
+                m.nilaiAngka, m.nilaiHuruf, m.bobot,
+                m.mutu, m.keterangan
+            };
+            
+            if(update){
+                tableModel.removeRow(baris);
+                tableModel.insertRow(baris, row);
+                setModeTambah();
+            } else {
+                tableModel.insertRow(baris, row);
+            }
+            
+            resetForm();
+            perbaruiLHS();
+        }
+    }
     private void fieldAngkaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fieldAngkaActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_fieldAngkaActionPerformed
 
     private void buttonSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonSimpanActionPerformed
         // TODO add your handling code here:
+        simpanUpdate(false);
+    }//GEN-LAST:event_buttonSimpanActionPerformed
+
+    private void tabelLHSMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabelLHSMouseClicked
+        // TODO add your handling code here:
+        if(evt.getClickCount()==1) tampilkan();
+    }//GEN-LAST:event_tabelLHSMouseClicked
+
+    private void buttonResetActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_buttonResetActionPerformed
+        // TODO add your handling code here:
+        resetForm();
+        setModeTambah();
+    }//GEN-LAST:event_buttonResetActionPerformed
+
+    /*
         mataKuliah m = new mataKuliah();
         m.kode = fieldKode.getText();
         m.matkul = fieldMataKuliah.getText();        
@@ -816,20 +908,19 @@ public class LHS extends javax.swing.JFrame {
         m.bobot = fieldBobot.getText();
         m.mutu = fieldMutu.getText();
         m.keterangan = fieldKeterangan.getText();
-        
+
         Object[] row = {
             m.kode, m.matkul, m.sks,
             m.nilaiAngka, m.nilaiHuruf, m.bobot,
             m.mutu, m.keterangan
         };
-        
+
         tableModel.insertRow(baris, row);
         totalSKS();
         totalMUTU();
         hitungIP();
         maxSKS();
-    }//GEN-LAST:event_buttonSimpanActionPerformed
-
+    */
     /**
      * @param args the command line arguments
      */
@@ -861,6 +952,7 @@ public class LHS extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton buttonHapus;
+    private javax.swing.JButton buttonReset;
     private javax.swing.JButton buttonSimpan;
     private javax.swing.JButton buttonUpdate;
     private javax.swing.JTextField fieldAngka;
@@ -879,7 +971,6 @@ public class LHS extends javax.swing.JFrame {
     private javax.swing.JTextField fieldTahun;
     private javax.swing.JTextField fieldTotalMutu;
     private javax.swing.JTextField fieldTotalSKS;
-    private javax.swing.JButton jButton7;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
